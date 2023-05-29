@@ -15,6 +15,7 @@ DEFAULT_ITER          = 2
 DEFAULT_STEP          = 30
 DEFAULT_DENOISE_W     = 0.5
 DEFAULT_ALTER_PROMPT  = None
+DEFAULT_ALTER_NEGATIVE_PROMPT = None
 DEFAULT_UPSCALER      = 'Lanczos'
 DEFAULT_RESIZE_MODE   = 'Adjust'
 DEFAULT_SAVE_INTERM   = False
@@ -92,6 +93,7 @@ class Script(Script):
                 denoising_strength = gr.Slider(label='Denoising strength', value=lambda: DEFAULT_DENOISE_W, minimum=0.0, maximum=1.0, step=0.01)
             with gr.Row():
                 alter_prompt = gr.TextArea(label='Img2img prompt', value=lambda: DEFAULT_ALTER_PROMPT, lines=2)
+                alter_negative_prompt = gr.TextArea(label='Img2img negative prompt', value=lambda: DEFAULT_ALTER_NEGATIVE_PROMPT, lines=2)
         
         with gr.Row():
             save_interm = gr.Checkbox(label='Save intermediate images', value=lambda: DEFAULT_SAVE_INTERM)
@@ -99,13 +101,13 @@ class Script(Script):
         return [iters, 
                 upscaler, resize_mode, target_width, target_height,
                 steps, denoising_strength, alter_prompt,
-                save_interm]
+                alter_negative_prompt, save_interm]
 
     def run(self, p:StableDiffusionProcessingTxt2Img, 
             iters:int, 
             upscaler:str, resize_mode:str, target_width:int, target_height:int, 
             steps:int, denoising_strength:float, alter_prompt:str,
-            save_interm:bool):
+            alter_negative_prompt:str, save_interm:bool):
 
         if 'force disable original hires.fix':
             p.enable_hr = False
@@ -138,6 +140,7 @@ class Script(Script):
         p:StableDiffusionProcessingImg2Img = txt2img_to_img2img(p)
         p.steps = int(steps / denoising_strength)       # NOTE: to work alike original hires.fix
         p.prompt = alter_prompt or p.prompt
+        p.negative_prompt = alter_negative_prompt or p.negative_prompt
         p.denoising_strength = denoising_strength
         p.resize_mode = resize_mode
 
